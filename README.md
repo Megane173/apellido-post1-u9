@@ -1,6 +1,8 @@
 # Recordatorios Citas Service
 
-![CI](https://github.com/[usuario]/apellido-post1-u9/actions/workflows/ci.yml/badge.svg)
+## Documentación
+![CI](documentacion/gitHubActions.png)
+![Pruebas en verde](documentacion/sucessTests.png)
 
 ## Descripción
 Repositorio del post-contenido de la Unidad 9 de Patrones de Diseño
@@ -43,5 +45,26 @@ interacción explícita: verify(reminderChannelFactory).obtenerCanal(EMAIL).
 
 Para ReminderChannelFactory se utilizará un mock para controlar el canal devuelto y verificar que el servicio solicita el correspondiente a cita.getCanalPreferido(). El canal devuelto también se simulará para verificar que recibe la cita y el mensaje construido. El objetivo es evaluar las decisiones del servicio y sus interacciones con los colaboradores, no comprobar la lógica interna de selección de la fábrica ni el funcionamiento real del canal.
 
-Para Clock se usara un fake apoyado en una implementacion real del JDK, Clock.fixed(...). Se utilizará esta implementación de Java para fijar la fecha y la hora durante la prueba. Así se obtienen resultados deterministas de forma mas simple y fiel que mockearla a mano.
+Para Clock se usará un fake apoyado en una implementación real del JDK, Clock.fixed(...). Se utilizará esta implementación de Java para fijar la fecha y la hora durante la prueba. Así se obtienen resultados deterministas de forma más simple y fiel que mockearla a mano.
 
+### Punto de decisión — diagnóstico antes del refactor
+
+El método `enviarRecordatorioUrgente()` no se podía testear en su forma original porque construía directamente una instancia de `SmsReminderChannel` mediante `new` dentro del cuerpo del método. Esta construcción acoplaba el método a una implementación concreta, impidiendo sustituir fácilmente esa dependencia por un *mock* para controlar su comportamiento durante las pruebas unitarias.
+
+En contraste, `enviarRecordatoriosPendientes()`, trabajado en la Parte 1, sí era testeable porque utilizaba una dependencia inyectada, lo que permitía simular su comportamiento y verificar las interacciones sin depender de la implementación real.
+
+**El refactor DIP (Parte 2).** Para solucionar este problema, se trasladó la creación de `SmsReminderChannel` al método `canalUrgente()` de `CanalUrgenteConfig` y se inyectó `ReminderChannel` mediante el constructor. Esto hizo que `enviarRecordatorioUrgente()` fuera testeable sin cambiar su comportamiento externo. La prueba `enviarRecordatorioUrgente_gatewayFalla_noMarcaComoEnviado` demuestra cómo la testabilidad es una consecuencia directa de aplicar el principio de inversión de dependencias (DIP), al permitir sustituir la implementación concreta por una dependencia controlable durante las pruebas.
+
+## Ejecutar las pruebas
+```bash
+mvn test                  # Pruebas unitarias
+mvn verify                # Unitarias + integración
+```
+
+## Herramientas utilizadas
+- Java 21, Spring Boot 4.1, Spring Data JPA, H2, JUnit 5, Mockito
+- Apache Maven, GitHub Actions, Git, GitHub
+
+## Conclusiones
+En este Postcontenido se aprendió a seleccionar test doubles adecuados según el tipo de prueba y comportamiento de los colaboradores de una clase y método a probar, se exploró la repercusión de no aplicar (DIP) en los test, se aprenden criterios para cuándo usar implementaciones reales y cuando mockear (pruebas de integración con H2 pero con mock de ApiGateway). Finalmente, se aplica workflow de integración continua con GitHub actions para automatizar la ejecución de las pruebas. Estos aprendizajes permiten pruebas más controlables y confiables, además de facilitar la detección temprana de errores durante el desarrollo. 
+  
