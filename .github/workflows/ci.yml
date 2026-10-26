@@ -23,4 +23,4 @@ jobs:
           cache: maven
 
       - name: Compilar y ejecutar todas las pruebas
-        run: mvn -B verify --no-transfer-progress
+        run: mvn -B -U clean verify --no-transfer-progress
